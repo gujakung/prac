@@ -19,66 +19,69 @@ const instructions = Platform.select({
 type Props = {};
 export default class App extends Component<Props> {
   state = {
-    placeName : '',
-    places:[]
+    taskName : '',
+    tasks:[]
   }
 
-  placeNameChangeHandler = val => {
+  taskNameChangeHandler = val => {
     this.setState({
-      placeName : val
+      taskName : val
     });
   };
 
-  placeSubmitHander = () => {
-    if(this.state.placeName.trim() === ""){
+  taskSubmitHander = () => {
+    if(this.state.taskName.trim() === ""){
       return;
     }
 
     this.setState(prevState =>{
       return{
-        places: prevState.places.concat(prevState.placeName)
+        tasks: prevState.tasks.concat({
+          name: prevState.taskName,
+          status: 'ready',
+          id: `${Math.random()}`
+        })
       }
     })
 
-    this.setState({placeName:''})
+    this.setState({taskName:''})
   };
 
-  colorChanger = j =>{
-    if(j="#eee"){
-      j = "green";
-      return;
-    }
-    j="#eee";
-    return;
+  completeTask = id =>{
+    this.setState(prevState => {
+      return {
+        tasks: prevState.tasks.map(task => {
+          if (task.id === id) return { ...task, status: task.status === 'complete' ? 'ready' : 'complete'};
+          return task;
+        })
+      };
+    });
   }
-
   render() {
     
-    const placesOutput = this.state.places.map((place,i,j) => (
-      j="#eee",
+    const tasksOutput = this.state.tasks.map((task) => (
       <TouchableOpacity 
-      style={{
-        width:"100%",
-        margin: 5,
-        padding: 10,
-        backgroundColor: j    
-      }}
-        key={i} 
-        
-        onPress={()=>{
-          this.colorChanger(j)
+        style={{
+          width:"100%",
+          margin: 5,
+          padding: 10,
+          backgroundColor: task.status === 'ready' ? '#eee' : 'green'  
         }}
-
+        key={task.id} 
+        onPress={()=>{
+          this.completeTask(task.id)
+        }}
         onLongPress={()=>{
           this.setState(prevState=>{
-            return{
-              places: prevState.places.slice(0,i).concat(prevState.places.slice(i+1))
+            const newTasks = prevState.tasks.filter(t => t.id !== task.id);
+            return {
+              tasks: newTasks
             }
           })
         }}
       >
         <View>
-          <Text>{place}</Text>
+          <Text>{task.name}</Text>
         </View>
       </TouchableOpacity>
     ));
@@ -86,19 +89,20 @@ export default class App extends Component<Props> {
       <View style={styles.container}>
         <View style={styles.inputContainer}>
           <TextInput 
-            style = {styles.placeInput}
+            style = {styles.taskInput}
             placeholder = 'enter your todo'
-            value = {this.state.placeName}
-            onChangeText={this.placeNameChangeHandler}
+            value = {this.state.taskName}
+            onChangeText={this.taskNameChangeHandler}
+            autoCorrect={false}
           />
           <Button 
-            style = {styles.placeButton} 
+            style = {styles.taskButton} 
             title = "Add" 
-            onPress = {this.placeSubmitHander}
+            onPress = {this.taskSubmitHander}
           />
         </View>
         <View style={styles.listContainer}>
-          {placesOutput}
+          {tasksOutput}
         </View>
       </View>
     );
@@ -120,10 +124,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center"
   },
-  placeInput:{
+  taskInput:{
     width: "70%"
   },
-  placeButton:{
+  taskButton:{
     width: "30%"
   },
   listItem:{
